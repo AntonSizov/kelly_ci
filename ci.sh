@@ -71,7 +71,7 @@ kelly-start(){
 	echo "OK"
 	echo -n "Configuring kelly..."
 	$KELLY_DIR/rel/files/kelly_http_configure > /dev/null 2>&1
-	echo "Ready"
+	echo "OK"
 }
 
 kelly-stop(){
@@ -176,7 +176,7 @@ billy-start(){
 	echo "OK"
 	echo -n "Configuring billy..."
 	$BILLY_DIR/rel/files/billy_http_configure > /dev/null 2>&1
-	echo "Ready"
+	echo "OK"
 }
 
 billy-stop(){
@@ -323,16 +323,29 @@ case "$1" in
 			echo "%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%"
 			echo "%%%%%%%%%%%%% START TEST CASE ($test) %%%"
 			echo "%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%"
-			mongo-clean # should stop on any error
+			mongo-clean
 			env-clean
 			env-start
 			make -C ./k1api $test
+			if [ "$?" != "0" ]; then
+				env-stop
+				exit 1
+			fi
 			env-stop
 		done
 		mongo-stop
 		;;
 	env-stop)
 		env-stop
+		;;
+	force-stop)
+		INSTANCES="kelly k1api just billy funnel rabbit"
+		for name in $INSTANCES; do
+			echo "Force stopping $name..."
+			PID=`ps ax -o pid= -o command= | grep $name | grep beam | awk '{ print $1 }'`
+			kill -9 $PID
+		done
+		smppsim-stop
 		;;
     *)
         echo "Usage: $SCRIPT {test-k1api}"
