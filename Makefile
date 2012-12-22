@@ -20,10 +20,11 @@ K1API-REL=$(K1API-DIR)/rel/k1api
 
 SMPPSIM-DIR=SMPPSim
 
-
 RMQ-DIR=./rmq
 
-all: $(RMQ-DIR) $(SMPPSIM-DIR) $(K1API-REL) $(KELLY-REL) $(JUST-REL) $(FUNNEL-REL) $(BILLY-REL)
+LOG-DIR=./log
+
+all: $(LOG-DIR) $(RMQ-DIR) $(SMPPSIM-DIR) $(K1API-REL) $(KELLY-REL) $(JUST-REL) $(FUNNEL-REL) $(BILLY-REL)
 	@./ci.sh test-k1api
 
 $(KELLY-DIR):
@@ -81,11 +82,16 @@ clean-working-dir:
 	@echo OK
 
 $(SMPPSIM-DIR):
-	eval "wget https://dl.dropbox.com/u/85105941/SMPPSim.tar.gz"
-	tar xzf ./SMPPSim.tar.gz
-	rm SMPPSim.tar.gz
-	chmod +x $(SMPPSIM-DIR)/startsmppsim.sh
-	cp ./smppsim.props $(SMPPSIM-DIR)/conf/
+	@echo -n Fetching smppsim...
+	@eval "wget https://dl.dropbox.com/u/85105941/SMPPSim.tar.gz"
+	@tar xzf ./SMPPSim.tar.gz
+	@rm SMPPSim.tar.gz
+	@chmod +x $(SMPPSIM-DIR)/startsmppsim.sh
+	@cp ./etc/smppsim.props $(SMPPSIM-DIR)/conf/
+	@echo OK
 
 $(RMQ-DIR):
 	@mkdir ./rmq
+
+$(LOG-DIR):
+	@mkdir ./log

@@ -70,7 +70,11 @@ kelly-start(){
 	fi
 	echo "OK"
 	echo -n "Configuring kelly..."
-	$KELLY_DIR/rel/files/kelly_http_configure > /dev/null 2>&1
+	$KELLY_DIR/rel/files/http_conf.sh > ./log/kelly_http_conf.log 2>&1
+	if [ "$?" != "0" ]; then
+		echo "Error. See ./log/kelly_http_conf.log for more info"
+		exit 1
+	fi
 	echo "OK"
 }
 
