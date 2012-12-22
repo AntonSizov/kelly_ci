@@ -179,7 +179,11 @@ billy-start(){
 	fi
 	echo "OK"
 	echo -n "Configuring billy..."
-	$BILLY_DIR/rel/files/billy_http_configure > /dev/null 2>&1
+	$BILLY_DIR/rel/files/http_conf.sh > ./log/billy_http_conf.log 2>&1
+	if [ "$?" != "0" ]; then
+		echo "Error. See ./log/billy_http_conf.log for more info"
+		exit 1
+	fi
 	echo "OK"
 }
 
