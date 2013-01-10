@@ -324,6 +324,22 @@ env-clean(){
 }
 
 case "$1" in
+	test-kelly)
+		mongo-start
+		echo "%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%"
+		echo "%%%%%%%%%%%%% START KELLY HTTP TESTS %%%"
+		echo "%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%"
+		mongo-clean
+		env-clean
+		env-start
+		make -C ./kelly api-test
+		if [ "$?" != "0" ]; then
+			env-stop
+			exit 1
+		fi
+		env-stop
+		mongo-stop
+		;;
 	test-k1api)
 		TEST_CASES="mt-prepaid-test mt-postpaid-test mo-test"
 		mongo-start

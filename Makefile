@@ -1,5 +1,5 @@
 KELLY-DIR=kelly
-KELLY-BRANCH=mongodb_storage
+KELLY-BRANCH=as_http_api_tests
 KELLY-REL=$(KELLY-DIR)/rel/kelly/
 
 FUNNEL-DIR=funnel
@@ -25,6 +25,7 @@ RMQ-DIR=./rmq
 LOG-DIR=./log
 
 all: $(LOG-DIR) $(RMQ-DIR) $(SMPPSIM-DIR) $(K1API-REL) $(KELLY-REL) $(JUST-REL) $(FUNNEL-REL) $(BILLY-REL)
+	@./ci.sh test-kelly
 	@./ci.sh test-k1api
 
 $(KELLY-DIR):
