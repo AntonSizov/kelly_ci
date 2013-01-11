@@ -11,7 +11,7 @@ JUST-BRANCH=master
 JUST-REL=$(JUST-DIR)/just_mini
 
 BILLY-DIR=billy
-BILLY-BRANCH=mongodb_storage
+BILLY-BRANCH=as_http_tests
 BILLY-REL=$(BILLY-DIR)/rel/billy/
 
 K1API-DIR=k1api
@@ -26,6 +26,7 @@ LOG-DIR=./log
 
 all: $(LOG-DIR) $(RMQ-DIR) $(SMPPSIM-DIR) $(K1API-REL) $(KELLY-REL) $(JUST-REL) $(FUNNEL-REL) $(BILLY-REL)
 	@./ci.sh test-kelly
+	@./ci.sh test-billy
 	@./ci.sh test-k1api
 
 $(KELLY-DIR):

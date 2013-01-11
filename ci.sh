@@ -340,12 +340,29 @@ case "$1" in
 		env-stop
 		mongo-stop
 		;;
+	test-billy)
+		mongo-start
+		echo "%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%"
+		echo "%%%%%%%%%%%%% START BILLY HTTP TESTS %%%"
+		echo "%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%"
+		env-clean
+		mongo-clean
+		billy-start
+		mongo-clean
+		make -C ./billy api-test
+		if [ "$?" != "0" ]; then
+			env-stop
+			exit 1
+		fi
+		billy-stop
+		mongo-stop
+		;;
 	test-k1api)
 		TEST_CASES="mt-prepaid-test mt-postpaid-test mo-test"
 		mongo-start
 		for test in $TEST_CASES; do
 			echo "%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%"
-			echo "%%%%%%%%%%%%% START TEST CASE ($test) %%%"
+			echo "%%%%%%% START ONEAPI TEST CASE ($test) %%%"
 			echo "%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%"
 			mongo-clean
 			env-clean
