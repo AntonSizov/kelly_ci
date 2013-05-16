@@ -37,16 +37,16 @@ PERCENTAGE_THAT_TRANSITION=100
 # add up to 100 and must be integer values. SMPPSim will adjust the percentages if they do not.
 
 # Percentage of messages that will transition from ENROUTE to DELIVERED
-PERCENTAGE_DELIVERED=90
+PERCENTAGE_DELIVERED=100
 
 # Percentage of messages that will transition from ENROUTE to UNDELIVERABLE
-PERCENTAGE_UNDELIVERABLE=6
+PERCENTAGE_UNDELIVERABLE=0
 
 # Percentage of messages that will transition from ENROUTE to ACCEPTED
-PERCENTAGE_ACCEPTED=2
+PERCENTAGE_ACCEPTED=0
 
 # Percentage of messages that will transition from ENROUTE to REJECTED
-PERCENTAGE_REJECTED=2
+PERCENTAGE_REJECTED=0
 
 # Time messages held in queue before being discarded, after a final state has been reached (milliseconds)
 # For example, after transitioning to DELIVERED (a final state), state info about this message will be
@@ -104,9 +104,9 @@ CAPTURE_SME_BINARY=false
 CAPTURE_SME_BINARY_TO_FILE=sme_binary.capture
 CAPTURE_SMPPSIM_BINARY=false
 CAPTURE_SMPPSIM_BINARY_TO_FILE=smppsim_binary.capture
-CAPTURE_SME_DECODED=false
+CAPTURE_SME_DECODED=true
 CAPTURE_SME_DECODED_TO_FILE=sme_decoded.capture
-CAPTURE_SMPPSIM_DECODED=false
+CAPTURE_SMPPSIM_DECODED=true
 CAPTURE_SMPPSIM_DECODED_TO_FILE=smppsim_decoded.capture
 
 # Byte Stream Callback
