@@ -90,6 +90,8 @@ $(JUST-DIR):
 $(JUST-REL): $(JUST-DIR)
 	@echo Building just...
 	@make -C $(JUST-DIR)
+	@cp -r $(JUST-REL)/log $(JUST-REL)/log_
+	@cp -r $(JUST-REL)/data $(JUST-REL)/data_
 
 $(FUNNEL-DIR):
 	@echo -n Cloning funnel into $(FUNNEL-DIR)...
@@ -99,6 +101,8 @@ $(FUNNEL-DIR):
 $(FUNNEL-REL): $(FUNNEL-DIR)
 	@echo Building funnel...
 	@make -C $(FUNNEL-DIR)
+	@cp -r $(FUNNEL-REL)/log $(FUNNEL-REL)/log_
+	@cp -r $(FUNNEL-REL)/data $(FUNNEL-REL)/data_
 
 $(BILLY-DIR):
 	@echo -n Cloning billy into $(BILLY-DIR)...

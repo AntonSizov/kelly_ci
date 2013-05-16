@@ -145,8 +145,8 @@ just-clean(){
 	echo -n "Cleaning just..."
 	rm -rf $JUST_REL/log
 	rm -rf $JUST_REL/data
-	cp -r ./etc/just_data $JUST_REL/data/
-	cp -r ./etc/just_log $JUST_REL/log
+	cp -r $JUST_REL/data_ $JUST_REL/data
+	cp -r $JUST_REL/log_ $JUST_REL/log
 	echo "OK"
 }
 
@@ -181,8 +181,8 @@ funnel-clean(){
 	echo -n "Cleaning $NAME..."
 	rm -rf $FUNNEL_REL/log
 	rm -rf $FUNNEL_REL/data
-	cp -r ./etc/funnel_data $FUNNEL_REL/data/
-	cp -r ./etc/funnel_log $FUNNEL_REL/log
+	cp -r $FUNNEL_REL/data_ $FUNNEL_REL/data
+	cp -r $FUNNEL_REL/log_ $FUNNEL_REL/log
 	echo "OK"
 }
 
