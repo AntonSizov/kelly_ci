@@ -1,0 +1,64 @@
+
+#
+# CORE
+#
+group = core
+admin-port = 13000
+smsbox-port = 13001
+admin-password = admin
+#status-password = status
+# 0 'debug', 1 'info', 2 'warning, 3 'error', 4 'panic'
+log-level = 0
+log-file = %kannel-log%
+access-log = %access-log%
+store-file = %store-file%
+
+#
+# SMSC
+#
+group = smsc
+smsc = smpp
+smsc-id = smsc-fun-postpaid
+host = 127.0.1.1
+port = 2775
+receive-port = 0
+transceiver-mode = true
+system-type = fun-postpaid
+smsc-username = user
+smsc-password = password
+
+#
+# SMSBOX
+#
+group = smsbox
+smsbox-id = smsbox-fun-postpaid
+bearerbox-host = localhost
+sendsms-port = 13003
+sendsms-chars = "0123456789 +-"
+# In order to be able to receive messages with empty source address
+# see http://extranet.powermemobile.com/issues/17444
+# global-sender = +375296660001
+global-sender = ""
+# 0 'debug', 1 'info', 2 'warning, 3 'error', 4 'panic'
+log-level = 0
+log-file = %smsbox-log%
+access-log = %access-log%
+
+# SEND-SMS USERS
+group = sendsms-user
+username = test
+password = test
+max-messages = 8
+concatenation = true
+
+# SMS-SERVICE
+group = sms-service
+# send sms with `ip' body and the url will be requested
+keyword = ip
+get-url = "http://icanhazip.com"
+
+group = sms-service
+keyword = default
+# no reply will be sent
+max-messages = 0
+text = "No action specified"

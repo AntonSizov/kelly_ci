@@ -1,5 +1,19 @@
 #!/bin/bash
 
+# export PATH=/opt/mongodb/bin/:$PATH
+
+# SMSBOX Settings
+SMSB_HOST=localhost
+SMSB_PORT=13003
+SMSBOX_USER=test
+SMSBOX_PSW=test
+SMSBOX_FROM=
+SMSBOX_TO=%2B375443066532
+SEND_MT_SMS_TEXT=test-funnel
+SEND_MT_SMS_DLR_MASK=31
+SEND_MT_SMS_REQ="http://$SMSB_HOST:$SMSB_PORT/cgi-bin/sendsms?username=$SMSBOX_USER&password=$SMSBOX_PSW&from=$SMSBOX_FROM&to=$SMSBOX_TO&text=$SEND_MT_SMS_TEXT&dlr-mask=$SEND_MT_SMS_DLR_MASK"
+
+MONGODB_PATH=`which mongo`; if [ ! "$MONGODB_PATH" ]; then echo "mongodb is not in path"; exit 1; fi
 export RABBITMQ_MNESIA_BASE=./rmq/mnesia
 export RABBITMQ_LOG_BASE=./rmq/log
 export RABBITMQ_PID_FILE=./rmq/pid
@@ -25,6 +39,10 @@ BILLY_REL="$BILLY_DIR/rel/billy/"
 
 K1API_DIR="k1api"
 K1API_REL="$K1API_DIR/rel/k1api"
+
+
+BB=`which bearerbox`; if [ ! "$BB" ]; then echo kannel bearerbox not installed; exit 1; fi
+SB=`which smsbox`; if [ ! "$SB" ]; then echo kannel smsbox not installed; exit 1; fi
 
 smppsim-start(){
     if [ "$SMPPSIM_RES" = "200" ]; then
@@ -56,6 +74,8 @@ smppsim-clean(){
     fi
 	echo -n "Cleaning smppsim..."
 	rm -f ./SMPPSim/smppsim?.log.?
+	rm -f ./SMPPSim/sme_decoded.capture
+	rm -f ./SMPPSim/smppsim_decoded.capture
 	echo "OK"
 }
 
@@ -252,9 +272,9 @@ mongo-stop(){
 
 mongo-clean(){
 	echo -n "Cleaning mongodb..."
-	RESULT=`mongo localhost/kellydb --quiet --eval 'r=db.dropDatabase();if (r.dropped=="kellydb" && r.ok==1) {"ok"} else {"err"}'`
+	RESULT=`mongo localhost/kelly --quiet --eval 'r=db.dropDatabase();if (r.dropped=="kelly" && r.ok==1) {"ok"} else {"err"}'`
 	if [ "$RESULT" != "ok" ]; then
-		echo "error [kellydb]"
+		echo "error [kelly]"
 		exit 1
 	fi
 	RESULT=`mongo localhost/billydb --quiet --eval 'r=db.dropDatabase();if (r.dropped=="billydb" && r.ok==1) {"ok"} else {"err"}'`
@@ -294,6 +314,18 @@ rabbit-clean(){
 	echo "OK"
 }
 
+kannel-start(){
+	echo -n "Starting Kannel..."
+	$(pwd)"/kannel/sbin/bearerbox" -V 1 -d $(pwd)"/etc/kannel.conf"
+	$(pwd)"/kannel/sbin/smsbox" -V 1 -d $(pwd)"/etc/kannel.conf"
+	echo OK
+}
+
+kannel-stop(){
+	echo -n "Stopping Kannel..."
+	echo OK
+}
+
 env-start(){
 	rabbit-start
 	smppsim-start
@@ -302,9 +334,11 @@ env-start(){
 	funnel-start
 	k1api-start
 	kelly-start
+	kannel-start
 }
 
 env-stop(){
+	kannel-stop
 	kelly-stop
 	k1api-stop
 	funnel-stop
@@ -321,6 +355,16 @@ env-clean(){
 	funnel-clean
 	k1api-clean
 	kelly-clean
+}
+
+lookup_smppsim_logs_for_mes(){
+	echo lookup for $2
+	RES=`grep $2 ./SMPPSim/smppsim_decoded.capture | grep DELIVRD | wc -l`
+	echo Lookup smppsim log command returned: $RES
+	if [[ "$RES" != "$1" ]]; then
+		echo ERROR: SMPPSIM did not send receipt to just
+		exit 1
+	fi
 }
 
 case "$1" in
@@ -376,20 +420,109 @@ case "$1" in
 		done
 		mongo-stop
 		;;
+	test-funnel)
+		echo "%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%"
+		echo "%%%%%%% START FUNNEL TESTS %%%"
+		echo "%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%"
+
+		#env clean
+		mongo-clean
+		rabbit-clean
+		smppsim-clean
+		just-clean
+		funnel-clean
+		kelly-clean
+
+
+		#env start
+		rabbit-start
+		smppsim-start
+		just-start
+		funnel-start
+		kelly-start
+		kannel-start
+
+		echo -n Waiting for connection between kannel and funnel...;sleep 2;echo OK
+
+		REQ_RESULT=$(curl -s -D - "$SEND_MT_SMS_REQ" -o /dev/null | grep '202 Accepted')
+		if [ "$REQ_RESULT" == "" ]; then
+			echo Bad response
+			exit 1
+		else
+			echo Message successfully sent
+		fi
+
+		# loogup for kannel sms id
+		sleep 1
+		ACC_LOG=./kannel/log/access.log
+		TEXT=test-funnel
+		ID=`grep 'Sent SMS' $ACC_LOG | grep $TEXT | tail -1 | awk '{print $9}'`
+		echo Kannel sent sms id: $ID
+		ESCAPED_PATTERN=`printf "%q" $ID`
+
+		echo -n Waiting for sent message registered in logs...
+		sleep 10
+		echo OK
+
+		# loogup for delivrd in smppsim logs
+		lookup_smppsim_logs_for_mes 1 'test-funnel'
+		if [ "$?" != "0" ]; then
+			echo Lookup error
+			env-stop
+			exit 1
+		fi
+
+		# lookup for delivrd in kannel acc_log
+		KANNEL_DELIVERY=`grep $ESCAPED_PATTERN $ACC_LOG | grep DELIVRD`
+		if [[ "$KANNEL_DELIVERY" == "" ]];then
+			echo Delivery receipt not found in kannel access log
+			exit 1
+		else
+			echo Delivery receipt found in kannel access log
+		fi
+
+		echo TEST OK
+		./ci.sh force-stop
+		mongo-clean
+		exit 0
+		;;
+	env-start)
+		echo "%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%"
+		echo "%%%%%%%%%%%%%%%% START ENV ONLY %%%%%%%%%%"
+		echo "%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%"
+		mongo-start
+		mongo-clean
+		env-clean
+		env-start
+		;;
 	env-stop)
 		env-stop
 		;;
 	force-stop)
-		INSTANCES="kelly k1api just billy funnel rabbit"
-		for name in $INSTANCES; do
+		# stop erl instances
+		ERL_INSTANCES="kelly k1api just billy funnel rabbit"
+		for name in $ERL_INSTANCES; do
 			echo "Force stopping $name..."
 			PID=`ps ax -o pid= -o command= | grep $name | grep beam | awk '{ print $1 }'`
-			kill -9 $PID
+			if [ "$PID" != "" ]; then
+				kill -9 $PID
+			fi
 		done
+
+		# stop other instances
+		INSTANCES="smsbox bearerbox"
+		for name in $INSTANCES; do
+			echo "Force stopping $name..."
+			PID=`ps ax -o pid= -o command= | grep $name | grep sbin | awk '{ print $1 }'`
+			if [ "$PID" != "" ]; then
+				kill -9 $PID
+			fi
+		done
+
 		smppsim-stop
 		;;
     *)
-        echo "Usage: $SCRIPT {test-k1api}"
+        echo "Usage: $SCRIPT {test-kelly|test-billy|test-funnel|test-k1api|env-stop|env-start|force-stop}"
         exit 1
         ;;
 esac

@@ -1,22 +1,36 @@
+
+PWD=`pwd`
+
 KELLY-DIR=kelly
-KELLY-BRANCH=as_http_api_tests
+KELLY-REP="git://github.com/PowerMeMobile/kelly.git"
+KELLY-BRANCH=dynamic_mongodb_storage
 KELLY-REL=$(KELLY-DIR)/rel/kelly/
 
 FUNNEL-DIR=funnel
-FUNNEL-BRANCH=billy-preview
+FUNNEL-REP="git@github.com:PowerMeMobile/funnel_mini_rel.git"
+FUNNEL-BRANCH=master
 FUNNEL-REL=$(FUNNEL-DIR)/funnel_mini
 
 JUST-DIR=just
+JUST-REP="git://github.com/PowerMeMobile/just_mini_rel.git"
 JUST-BRANCH=master
 JUST-REL=$(JUST-DIR)/just_mini
 
 BILLY-DIR=billy
-BILLY-BRANCH=as_http_tests
+BILLY-REP="git@github.com:PowerMeMobile/billy.git"
+BILLY-BRANCH=mongodb_storage
 BILLY-REL=$(BILLY-DIR)/rel/billy/
 
 K1API-DIR=k1api
+K1API-REP="git@github.com:PowerMeMobile/k1api.git"
 K1API-BRANCH=develop
 K1API-REL=$(K1API-DIR)/rel/k1api
+
+KANNEL-SRC-DIR=gateway-1.4.3
+KANNEL-SRC=gateway-1.4.3.tar.gz
+KANNEL-SRC-URL="http://www.kannel.org/download/1.4.3/gateway-1.4.3.tar.gz"
+KANNEL-DIR=kannel
+KANNEL-CONF=./etc/kannel.conf
 
 SMPPSIM-DIR=SMPPSim
 
@@ -24,14 +38,44 @@ RMQ-DIR=./rmq
 
 LOG-DIR=./log
 
-all: $(LOG-DIR) $(RMQ-DIR) $(SMPPSIM-DIR) $(K1API-REL) $(KELLY-REL) $(JUST-REL) $(FUNNEL-REL) $(BILLY-REL)
+all: kelly-test billy-test funnel-test k1api-test
+
+get-env: $(LOG-DIR) $(RMQ-DIR) $(SMPPSIM-DIR) $(K1API-REL) $(KELLY-REL) $(JUST-REL) $(FUNNEL-REL) $(BILLY-REL)
+
+kelly-test: get-env
 	@./ci.sh test-kelly
+
+billy-test: get-env
 	@./ci.sh test-billy
+
+k1api-test: get-env
 	@./ci.sh test-k1api
+
+funnel-test: env-force-stop $(LOG-DIR) $(RMQ-DIR) $(SMPPSIM-DIR) $(KELLY-REL) $(JUST-REL) $(FUNNEL-REL) $(KANNEL-DIR) $(KANNEL-CONF)
+	@./ci.sh test-funnel
+
+env-force-stop:
+	@./ci.sh force-stop
+
+$(KANNEL-CONF):
+	@./etc/perform_kannel_conf $(PWD)
+
+$(KANNEL-DIR): $(KANNEL-SRC-DIR)
+	@mkdir $(KANNEL-DIR)
+	@make -C $(KANNEL-SRC-DIR) prefix=../$(KANNEL-DIR) install
+	@mkdir ./$(KANNEL-DIR)/log
+
+$(KANNEL-SRC-DIR): $(KANNEL-SRC)
+	@tar xzf ./$(KANNEL-SRC)
+	@cd ./$(KANNEL-SRC-DIR) && ./configure && cd ..
+	@make -C $(KANNEL-SRC-DIR)
+
+$(KANNEL-SRC):
+	@wget $(KANNEL-SRC-URL)
 
 $(KELLY-DIR):
 	@echo -n Cloning kelly into $(KELLY-DIR)...
-	@git clone --branch=$(KELLY-BRANCH) --depth=100 --quiet git://github.com/PowerMeMobile/kelly.git $(KELLY-DIR)
+	@git clone --branch=$(KELLY-BRANCH) --depth=1 --quiet $(KELLY-REP) $(KELLY-DIR)
 	@echo OK
 
 $(KELLY-REL): $(KELLY-DIR)
@@ -40,7 +84,7 @@ $(KELLY-REL): $(KELLY-DIR)
 
 $(JUST-DIR):
 	@echo -n Cloning just into $(JUST-DIR)...
-	@git clone --branch=$(JUST-BRANCH) --depth=100 --quiet git://github.com/PowerMeMobile/just_mini_rel.git $(JUST-DIR)
+	@git clone --branch=$(JUST-BRANCH) --depth=1 --quiet $(JUST-REP) $(JUST-DIR)
 	@echo OK
 
 $(JUST-REL): $(JUST-DIR)
@@ -49,7 +93,7 @@ $(JUST-REL): $(JUST-DIR)
 
 $(FUNNEL-DIR):
 	@echo -n Cloning funnel into $(FUNNEL-DIR)...
-	@git clone --branch=$(FUNNEL-BRANCH) --depth=100 --quiet git@github.com:PowerMeMobile/funnel_mini_rel.git $(FUNNEL-DIR)
+	@git clone --branch=$(FUNNEL-BRANCH) --depth=1 --quiet $(FUNNEL-REP) $(FUNNEL-DIR)
 	@echo OK
 
 $(FUNNEL-REL): $(FUNNEL-DIR)
@@ -58,7 +102,7 @@ $(FUNNEL-REL): $(FUNNEL-DIR)
 
 $(BILLY-DIR):
 	@echo -n Cloning billy into $(BILLY-DIR)...
-	@git clone --branch=$(BILLY-BRANCH) --depth=100 --quiet git@github.com:PowerMeMobile/billy.git $(BILLY-DIR)
+	@git clone --branch=$(BILLY-BRANCH) --depth=1 --quiet $(BILLY-REP) $(BILLY-DIR)
 	@echo OK
 
 $(BILLY-REL): $(BILLY-DIR)
@@ -67,7 +111,7 @@ $(BILLY-REL): $(BILLY-DIR)
 
 $(K1API-DIR):
 	@echo -n Cloning k1api into $(K1API-DIR)...
-	@git clone --branch=$(K1API-BRANCH) --depth=100 --quiet git@github.com:PowerMeMobile/k1api.git $(K1API-DIR)
+	@git clone --branch=$(K1API-BRANCH) --depth=1 --quiet $(K1API-REP) $(K1API-DIR)
 	@echo OK
 
 $(K1API-REL): $(K1API-DIR)

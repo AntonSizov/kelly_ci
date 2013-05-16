@@ -6,3 +6,6 @@ k1api/
 kelly/
 rmq/
 log/
+kannel/
+gateway*
+etc/kannel.conf

@@ -1,0 +1,15 @@
+#!/bin/bash
+
+ACCESS_LOG="$1/kannel/log/access.log"
+ACCESS_LOG="${ACCESS_LOG//\//\\/}"
+
+KANNEL_LOG="$1/kannel/log/kannel.log"
+KANNEL_LOG="${KANNEL_LOG//\//\\/}"
+
+STORE_FILE="$1/kannel/log/kannel.store"
+STORE_FILE="${STORE_FILE//\//\\/}"
+
+SMSBOX_LOG="$1/kannel/log/smsbox.log"
+SMSBOX_LOG="${SMSBOX_LOG//\//\\/}"
+
+sed -e "s/%access-log%/$ACCESS_LOG/g;s/%kannel-log%/$KANNEL_LOG/g;s/%store-file%/$STORE_FILE/g;s/%smsbox-log%/$SMSBOX_LOG/g" "$1/etc/kannel.conf.tmpl" > "$1/etc/kannel.conf"
