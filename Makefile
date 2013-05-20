@@ -3,7 +3,7 @@ PWD=`pwd`
 
 KELLY-DIR=kelly
 KELLY-REP="git://github.com/PowerMeMobile/kelly.git"
-KELLY-BRANCH=dynamic_mongodb_storage
+KELLY-BRANCH=master
 KELLY-REL=$(KELLY-DIR)/rel/kelly/
 
 FUNNEL-DIR=funnel
